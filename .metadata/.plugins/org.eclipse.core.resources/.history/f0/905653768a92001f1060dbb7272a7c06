@@ -1,0 +1,35 @@
+body {
+    margin: 20px;
+}
+
+.content {
+    width: 70%;
+    margin: 0 auto;
+}
+
+.board-title dl {
+    display: flex;
+}
+
+.board-title dt {
+	margin-right: 140px;
+}
+
+.forward {
+    border: 1px solid #ccc;
+    margin: 10px 0;
+    padding: 10px;
+}
+
+#number {
+	margin-right: 40px;
+}
+
+.post-title {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
