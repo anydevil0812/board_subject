@@ -1,8 +1,13 @@
 package dao;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,38 +20,40 @@ public class BoardDAO {
 		public int insertData(BoardDTO dto) {
 
 			int result = 0;
-			
 			Connection conn = null;
 			PreparedStatement pstmt = null;
 			String sql;
-
+			
+			Date date = new Date(System.currentTimeMillis());
+			Instant instant = date.toInstant();
+			LocalDateTime time = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
+			Timestamp timestamp = Timestamp.valueOf(time);
+			
 			try {
-				sql = "INSERT INTO board"
-					   + "(num,name,title,content,date,views)"
-					+ "VALUES"
-					   + "(?,?,?,?,?,1)";
+				sql = "INSERT INTO board "
+					   + "(name,title,content,create_dt,views) "
+					+ "VALUES "
+					   + "(?,?,?,?,1)";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 				
-				pstmt.setInt(1, dto.getNum());
-				pstmt.setString(2, dto.getName());
-				pstmt.setString(3, dto.getTitle());
-				pstmt.setString(4, dto.getContent());
-				pstmt.setString(5, dto.getDate());
+				pstmt.setString(1, dto.getName());
+				pstmt.setString(2, dto.getTitle());
+				pstmt.setString(3, dto.getContent());
+				pstmt.setTimestamp(4, timestamp);
 				
 				result = pstmt.executeUpdate(); 
 
-				pstmt.close();
+				DBUtil.close(pstmt, conn);
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 			return result; 
 		}
 		
-		// 게시글 총 개수 반환(페이지네이션)
+		// 게시글 총 개수 반환
 		public int getTotalDataCount () {
 			
 			int totalCount = 0;
@@ -56,7 +63,7 @@ public class BoardDAO {
 			String sql;
 			
 			try {
-				sql = "SELECT COUNT(*)"
+				sql = "SELECT COUNT(*) "
 					+ "FROM board";
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
@@ -72,13 +79,22 @@ public class BoardDAO {
 				e.printStackTrace();
 			}
 			return totalCount;
-			
 		}
 
-		// 전체 데이터 출력
-		public List<BoardDTO> getLists(int start, int end, String searchKey, String searchValue) {
-		
-			List<BoardDTO> lists = new ArrayList<BoardDTO>();
+		// 게시글 페이지네이션
+		public List<BoardDTO> getLists(Integer start, Integer size, Integer page, String searchKey, String searchValue) {
+			
+			Integer offset = null;
+			Integer fetch = null;
+			
+			if (size != null) {
+				fetch = size;
+			}
+			if (page != null && size != null) {
+				offset = (page - 1) * size;
+			}
+			
+			List<BoardDTO> li = new ArrayList<BoardDTO>();
 			Connection conn = null;
 			PreparedStatement pstmt = null;
 			ResultSet rs = null;
@@ -86,47 +102,40 @@ public class BoardDAO {
 
 			try {
 				
-				searchValue = "%" + searchValue + "%";
-				
 				sql = "SELECT * "
-					+ "FROM (";
-				sql+= "select rownum rnum, data.* from (";
-				sql+= "select num,name,subject,hitcount,";
-				sql+= "to_char(created,'YYYY-MM-DD') created ";
-				sql+= "from board where " + searchKey + " like ? ";
-				sql+= "order by num desc) data) " ;
-				sql+= "where rnum>=? and rnum<=?";
+					+ "FROM board "
+					+ "ORDER BY num ASC "
+					+ "OFFSET ? ROWS "
+					+ "FETCH NEXT ? ROWS ONLY ";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 				
-				pstmt.setString(1, searchValue);
-				pstmt.setInt(2, start);
-				pstmt.setInt(3, end);
+				pstmt.setInt(1, offset);
+				pstmt.setInt(2, fetch);
 				
 				rs = pstmt.executeQuery();
 				
 				while(rs.next()) {
 					
 					BoardDTO dto = new BoardDTO();
+					Timestamp ts = rs.getTimestamp("create_dt");
 					
 					dto.setNum(rs.getInt("num"));
 					dto.setName(rs.getString("name"));
-					
-					lists.add(dto);
+					dto.setTitle(rs.getString("title"));
+					dto.setDate(ts.toLocalDateTime());
+					li.add(dto);
 				}
-				
-				rs.close();
-				pstmt.close();
+				DBUtil.close(conn, pstmt, rs);
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
-			return lists;
+			return li;
 		}
 		
-		// num으로 조회한 한개의 데이터
+		// num으로 특정 게시글 하나 조회
 		public BoardDTO getReadData(int num) {
 
 			BoardDTO dto = null;
@@ -137,8 +146,8 @@ public class BoardDAO {
 
 			try {
 
-				sql = "SELECT *"
-					+ "FROM board"
+				sql = "SELECT * "
+					+ "FROM board "
 					+ "WHERE num=?";
 				
 				conn = DBUtil.connect();
@@ -156,8 +165,7 @@ public class BoardDAO {
 					dto.setName(rs.getString("name"));
 
 				}
-				rs.close();
-				pstmt.close();
+				DBUtil.close(conn, pstmt, rs);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -165,8 +173,8 @@ public class BoardDAO {
 			return dto;
 		}
 
-		// 조회수 증가
-		public int updateHitCount(int num) {
+		// 조회수 1 증가
+		public int updateViewCount(int num) {
 
 			int result = 0;
 			Connection conn = null;
@@ -175,18 +183,17 @@ public class BoardDAO {
 
 			try {
 
-				sql = "UPDATE board"
-					+ "SET views=views+1"
+				sql = "UPDATE board "
+					+ "SET views=views+1 "
 					+ "WHERE num=?";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 
 				pstmt.setInt(1, num);
-
 				result = pstmt.executeUpdate();
 
-				pstmt.close();
+				DBUtil.close(pstmt, conn);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -194,7 +201,7 @@ public class BoardDAO {
 			return result;
 		}
 		
-		// 데이터 수정
+		// 게시글 수정
 		public int updateData(BoardDTO dto) {
 			
 			int result = 0;
@@ -204,23 +211,21 @@ public class BoardDAO {
 			
 			try{
 				
-				sql = "UPDATE board"
-					+ "SET name=?, pwd=?, email=?, subject=?, content=?"
+				sql = "UPDATE board "
+					+ "SET content=? "
 					+ "WHERE num=?";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 				
-				pstmt.setString(1, dto.getName());
-				
+				pstmt.setString(1, dto.getContent());
 				result = pstmt.executeUpdate();
 				
-				pstmt.close();
+				DBUtil.close(pstmt, conn);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
 			return result;
 		}
 		
@@ -242,14 +247,12 @@ public class BoardDAO {
 				
 				result = pstmt.executeUpdate();
 				
-				pstmt.close();
+				DBUtil.close(pstmt, conn);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
 			return result;
-			
 		}
 
 }

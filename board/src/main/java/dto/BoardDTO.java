@@ -1,25 +1,20 @@
 package dto;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class BoardDTO {
 	
 	int num;
 	
 	String title;
-	
+
 	String name;
 	
-	String date;
+	LocalDateTime date;
 	
 	String content;
 
 	String views;
-	
-    public static String LocalDateTimeToString(LocalDateTime localDateTime) {
-        return localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    }
 	
 	public int getNum() {
 		return num;
@@ -45,11 +40,11 @@ public class BoardDTO {
 		this.name = name;
 	}
 
-	public String getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(String date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 	
