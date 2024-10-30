@@ -1,3 +1,5 @@
+<%@page import="java.util.ArrayList"%>
+<%@page import="java.time.LocalDateTime"%>
 <%@page import="dao.BoardDAO"%>
 <%@page import="util.DBUtil"%>
 <%@page import="java.sql.Connection"%>
@@ -9,48 +11,55 @@
 <%
 
 	Connection conn = DBUtil.connect();
-	BoardDTO dto = new BoardDTO();
 	BoardDAO dao = new BoardDAO();
+	
+ 	List<BoardDTO> li = dao.getLists(0, 10, 1);
+    request.setAttribute("lists", li);
+    List<String> timeList = new ArrayList<>();
+    
+    for(BoardDTO dto : li) {
+    	LocalDateTime time = dto.getDate(); 
+        String t = time.toString(); 
+        t = t.replace("T", " ");
+        timeList.add(t);
+    }
+    
 
 %>
 <html>
 <head>
-    <title>Subject1-3</title>
-    <link rel="stylesheet" href="./css/1.css"/> 
+    <title>게시판 목록</title>
+    <link rel="stylesheet" href="./css/main.css"/> 
 </head>
 <body>
     <h2>게시판</h2>
-    <div class="board-title">
-        <dl>
-            <dt id="number">번호</dt>
-            <dt id="title">제목</dt>
-            <dt id="writer">작성자</dt>
-            <dt id="date">작성일</dt>
-            <dt id="views">조회수</dt>
-        </dl>
-    </div>
     <div class="board-list">
-    	<c:forEach var="dto" items="${lists}">
-	        <dl>
-	            <dd>${dto.num}</dd>
-	            <dd>
-	            	<a href="${articleUrl}&num=${dto.num}">
-                    	${dto.subject}
-               		</a>
-	            </dd>
-	            <dd>${dto.name}</dd>
-	            <dd>${dto.date}</dd>
-	            <dd>${dto.count}</dd>
-	        </dl>
-        </c:forEach>
+    	<table class="board-table">
+		    <tr class="board-head"> 
+		    	<th id="number">번호</th>
+	            <th id="title">제목</th>
+	            <th id="writer">작성자</th>
+	            <th id="date">작성일</th>
+	            <th id="views">조회수</th>
+		    </tr>
+	    	<c:forEach var="dto" items="${lists}">
+		    	<tr class="board-content">
+		            <td>${dto.num}</td>
+		            <td>
+		            	<a href="post.jsp?num=${dto.num}">
+	                    	${dto.title}
+	               		</a>
+		            </td>
+		            <td>${dto.name}</td>
+		            <td>${dto.date}</td>
+		            <td>${dto.views}</td>
+	            </tr>
+        	</c:forEach>
+        </table>
     </div>
-    <c:forEach var="post" items="${posts}">
-        <div class="forward">
-            <div class="post-title">${post.title}</div>
-            <div>${post.content}</div>
-            <div>작성자: ${post.username}</div>
-        </div>
-    </c:forEach>
+    <form action="write.jsp" method="post" class="form-container2">
+		<button name="post-content" id="post-button">글쓰기</button>
+	</form>
     <form action="" method="post" class="form-container">
 	   <span>
 	       <select name="search-category">

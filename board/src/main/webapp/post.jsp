@@ -1,3 +1,4 @@
+<%@page import="java.time.LocalDateTime"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%@page import="dao.BoardDAO"%>
 <%@page import="dto.BoardDTO"%>
@@ -9,52 +10,58 @@
 	int num = Integer.parseInt(numParam); 
 	
 	BoardDAO dao = new BoardDAO();
-	BoardDTO dto = dao.getReadData(num);
+	dao.plusViewCount(num);
 	
-	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+	BoardDTO dto = dao.getReadData(num);
+	LocalDateTime time = dto.getDate();
+	String t = time.toString();
+	t = t.replace("T", " ");
+	
+	request.setAttribute("dto", dto);
+	request.setAttribute("time", t);
+	
 %>
 <!DOCTYPE html>
 <html>
 <head>
 	<title>게시글 조회</title>
+	<link rel="stylesheet" href="./css/post.css"/> 
 </head>
 <body>
-	<h3>게시판</h3>
-	<div>
-		<div><c:out value="${dto.title}"/></div>
-		<div>
-			<table>
-				<tr>
-					<td>순번</td>
-					<td>등록일</td>
-				</tr>
-				<tr>
-					<td><c:out value="${dto.num}"/></td>
-					<td><c:out value="${dto.date.format(formatter)}"/></td>
-				</tr>
-				<tr>
-					<td>작성자</td>
-					<td>조회수</td>
-				</tr>
-				<tr>
-					<td><c:out value="${dto.name}"/></td>
-					<td><c:out value="${dto.views}"/></td>
-				</tr>
-			</table>
-		</div>
-		<div>
-			<c:out value="${dto.content}"/>
-		</div>
+	<div class="table-container">
+		<table class="post-table">
+			<tr>
+				<th colspan="4"><c:out value="${dto.title}"/></th>				
+			</tr>
+			<tr>
+				<td class="narrow1">순번</td>
+				<td class="narrow2"><c:out value="${dto.num}"/></td>
+				<td class="narrow1">등록일</td>
+				<td class="narrow2"><c:out value="${time}"/></td>
+			</tr>
+			<tr>
+				<td>작성자</td>
+				<td><c:out value="${dto.name}"/></td>
+				<td>조회수</td>
+				<td><c:out value="${dto.views}"/></td>
+			</tr>
+			<tr id="content-area">
+				<td colspan="4"><c:out value="${dto.content}"/></td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					<span>
+						<button onclick="location.href='edit.jsp?num=${dto.num}'" >수정</button>	
+					</span>
+					<span>
+						<button onclick="location.href='delete.jsp?num=${dto.num}'">삭제</button>	
+					</span>
+					<span>
+						<button onclick="location.href='main.jsp'">메인으로</button>	
+					</span>
+				</td>
+			</tr>
+		</table>
 	</div>
-	<span>
-		<button value="수정" onclick="location.href='edit.jsp?num=${dto.num}'" ></button>	
-	</span>
-	<span>
-		<button value="삭제" onclick="location.href='delete.jsp?num=${dto.num}'"></button>	
-	</span>
-	<span>
-		<button value="목록" onclick="location.href='main.jsp'"></button>	
-	</span>
 </body>
 </html>

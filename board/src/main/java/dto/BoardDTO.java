@@ -4,17 +4,22 @@ import java.time.LocalDateTime;
 
 public class BoardDTO {
 	
-	int num;
+	private int num;
 	
-	String title;
+	private String title;
 
-	String name;
+	private String name;
 	
-	LocalDateTime date;
+	private LocalDateTime date;
 	
-	String content;
+	private String content;
 
-	String views;
+	private int views;
+	
+	private String fileName;
+	
+	private byte[] fileData;
+	
 	
 	public int getNum() {
 		return num;
@@ -56,12 +61,28 @@ public class BoardDTO {
 		this.content = content;
 	}
 	
-	public String getViews() {
+	public int getViews() {
 		return views;
 	}
 
-	public void setViews(String views) {
+	public void setViews(int views) {
 		this.views = views;
+	}
+	
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public byte[] getFileData() {
+		return fileData;
+	}
+
+	public void setFileData(byte[] fileData) {
+		this.fileData = fileData;
 	}
 	
 }

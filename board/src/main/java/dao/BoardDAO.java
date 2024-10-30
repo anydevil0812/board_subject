@@ -1,7 +1,7 @@
 package dao;
 
+import java.io.StringReader;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 import dto.BoardDTO;
 import util.DBUtil;
@@ -31,17 +32,20 @@ public class BoardDAO {
 			
 			try {
 				sql = "INSERT INTO board "
-					   + "(name,title,content,create_dt,views) "
+					   + "(name,title,content,create_dt,views,file_name,file_data) "
 					+ "VALUES "
-					   + "(?,?,?,?,1)";
+					   + "(?,?,?,?,1,?,?)";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
+				String content = dto.getContent();
 				
 				pstmt.setString(1, dto.getName());
 				pstmt.setString(2, dto.getTitle());
-				pstmt.setString(3, dto.getContent());
+				pstmt.setCharacterStream(3, new StringReader(content), content.length());
 				pstmt.setTimestamp(4, timestamp);
+				pstmt.setString(5, dto.getFileName());
+				pstmt.setBytes(6, dto.getFileData());
 				
 				result = pstmt.executeUpdate(); 
 
@@ -82,7 +86,7 @@ public class BoardDAO {
 		}
 
 		// 게시글 페이지네이션
-		public List<BoardDTO> getLists(Integer start, Integer size, Integer page, String searchKey, String searchValue) {
+		public List<BoardDTO> getLists(Integer start, Integer size, Integer page) {
 			
 			Integer offset = null;
 			Integer fetch = null;
@@ -125,6 +129,7 @@ public class BoardDAO {
 					dto.setName(rs.getString("name"));
 					dto.setTitle(rs.getString("title"));
 					dto.setDate(ts.toLocalDateTime());
+					dto.setViews(rs.getInt("views"));
 					li.add(dto);
 				}
 				DBUtil.close(conn, pstmt, rs);
@@ -152,7 +157,6 @@ public class BoardDAO {
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
-
 				pstmt.setInt(1, num);
 
 				rs = pstmt.executeQuery();
@@ -160,10 +164,16 @@ public class BoardDAO {
 				if (rs.next()) { 
 
 					dto = new BoardDTO();
-
+					
 					dto.setNum(rs.getInt("num"));
 					dto.setName(rs.getString("name"));
-
+					dto.setTitle(rs.getString("title"));
+					dto.setContent(rs.getString("content"));
+					dto.setDate(LocalDateTime.ofInstant(new Date(rs.getDate("create_dt").getTime()).toInstant(), ZoneId.systemDefault()));
+					dto.setViews(rs.getInt("views"));
+					dto.setFileName(rs.getString("file_name"));
+					dto.setFileData(rs.getBytes("file_data"));
+					
 				}
 				DBUtil.close(conn, pstmt, rs);
 
@@ -174,7 +184,7 @@ public class BoardDAO {
 		}
 
 		// 조회수 1 증가
-		public int updateViewCount(int num) {
+		public int plusViewCount(int num) {
 
 			int result = 0;
 			Connection conn = null;

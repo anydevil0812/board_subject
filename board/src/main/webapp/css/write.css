@@ -1,0 +1,54 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0; 
+    flex-direction: column;
+}
+
+table {
+    width: 100%; 
+    border-collapse: collapse;
+    border: 2px solid blue;
+}
+
+table tr {
+    height: 50px;
+    border: 2px solid lightgray;
+}
+
+table td {
+    border: 2px solid lightgray;
+}
+
+textarea {
+    width: 100%;
+    height: 450px;
+    resize: none;
+}
+
+.write-container {
+    width: 60%; 
+    margin: auto; 
+}
+
+.tag {
+	text-align: center;
+	width: 200px;
+}
+
+.button-group {
+	margin-top: 30px;
+	text-align: right;
+}
+
+#add {
+	margin-right: 20px;
+}
+
+@media (max-width: 768px) {
+    .write-container {
+        width: 90%; 
+    }
+}
