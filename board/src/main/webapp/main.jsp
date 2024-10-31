@@ -9,21 +9,39 @@
 <%@ page import="dto.BoardDTO" %>
 
 <%
-
+	
+	int currentPage = 1;
+	int pageSize = 1;
+	int pageRange = 10;
+	
+	if (request.getParameter("page") != null) {
+        currentPage = Integer.parseInt(request.getParameter("page"));
+    }
+	
 	Connection conn = DBUtil.connect();
 	BoardDAO dao = new BoardDAO();
 	
- 	List<BoardDTO> li = dao.getLists(0, 10, 1);
+	int totalPosts = dao.getTotalPostCount();
+	int totalPages = (int) Math.ceil((double) totalPosts / pageSize);
+	
+	int startPage = ((currentPage - 1) / pageRange) * pageRange + 1;
+    int endPage = Math.min(startPage + pageRange - 1, totalPages);
+	
+	request.setAttribute("currentPage", currentPage);
+    request.setAttribute("totalPages", totalPages);
+    request.setAttribute("startPage", startPage);
+    request.setAttribute("endPage", endPage);
+	
+ 	List<BoardDTO> li = dao.getLists((currentPage-1) * pageSize, pageSize, currentPage);
     request.setAttribute("lists", li);
-    List<String> timeList = new ArrayList<>();
     
+    List<String> timeList = new ArrayList<>();
     for(BoardDTO dto : li) {
     	LocalDateTime time = dto.getDate(); 
         String t = time.toString(); 
         t = t.replace("T", " ");
         timeList.add(t);
     }
-    
 
 %>
 <html>
@@ -57,6 +75,17 @@
         	</c:forEach>
         </table>
     </div>
+    <div class="pagination">
+	    <c:if test="${startPage > 1}">
+	        <a href="main.jsp?page=${startPage - 1}">이전</a>
+	    </c:if>
+	    <c:forEach begin="${startPage}" end="${endPage}" var="i">
+	        <a href="main.jsp?page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+	    </c:forEach>
+	    <c:if test="${endPage < totalPages}">
+	        <a href="main.jsp?page=${endPage + 1}">다음</a>
+	    </c:if>
+	</div>
     <form action="write.jsp" method="post" class="form-container2">
 		<button name="post-content" id="post-button">글쓰기</button>
 	</form>

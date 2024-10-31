@@ -58,7 +58,7 @@ public class BoardDAO {
 		}
 		
 		// 게시글 총 개수 반환
-		public int getTotalDataCount () {
+		public int getTotalPostCount () {
 			
 			int totalCount = 0;
 			Connection conn = null;
@@ -85,7 +85,7 @@ public class BoardDAO {
 			return totalCount;
 		}
 
-		// 게시글 페이지네이션
+		// 게시글 리스트 조회
 		public List<BoardDTO> getLists(Integer start, Integer size, Integer page) {
 			
 			Integer offset = null;
