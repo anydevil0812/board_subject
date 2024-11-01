@@ -6,11 +6,10 @@
 
 <%
 
-	String title = (String) request.getAttribute("title");
-	String username = (String) request.getAttribute("username");
 	String content = (String) request.getAttribute("content");
 	String fileName = (String) request.getAttribute("fileName");
 	File file = (File) request.getAttribute("file");
+	int num = (int) request.getAttribute("num");
 	
 	BoardDTO dto = new BoardDTO();
 	
@@ -25,19 +24,18 @@
 	    dto.setFileData(fileData);
 	}
     
-    dto.setName(username);
-    dto.setTitle(title);
     dto.setContent(content);
+    dto.setNum(num);
 
     BoardDAO dao = new BoardDAO();
-    int result = dao.insertData(dto);
+    int result = dao.updateData(dto);
     
     if (result > 0) {
         response.sendRedirect("main");
     } else {
 %>
         <script>
-            alert("게시글 추가에 실패했습니다. 다시 시도해 주세요.");
+            alert("게시글 변경에 실패했습니다. 다시 시도해 주세요.");
             history.back();
         </script>
 <%

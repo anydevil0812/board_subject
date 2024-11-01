@@ -44,7 +44,12 @@ table td {
 }
 
 #content-area {
+	position: relative;
+	top: 5px;
+	left: 5px;
 	height: 220px;
+	text-align: left;
+	vertical-align: top;
 }
 
 .button-group {

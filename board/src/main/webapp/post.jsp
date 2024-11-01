@@ -45,19 +45,27 @@
 				<td>조회수</td>
 				<td><c:out value="${dto.views}"/></td>
 			</tr>
+			 <tr>
+			 	<td>첨부파일</td>
+                <td colspan="3">
+                    <c:if test="${not empty dto.fileName}">
+                        <a href="download.jsp?num=${dto.num}">${dto.fileName}</a>
+                    </c:if>
+                </td>
+            </tr>
 			<tr id="content-area">
 				<td colspan="4"><c:out value="${dto.content}"/></td>
 			</tr>
 			<tr>
 				<td colspan="4">
 					<span>
-						<button onclick="location.href='edit.jsp?num=${dto.num}'" >수정</button>	
+						<button onclick="location.href='main?action=edit&num=${dto.num}'" >수정</button>	
 					</span>
 					<span>
-						<button onclick="location.href='delete.jsp?num=${dto.num}'">삭제</button>	
+						<button onclick="location.href='main?action=delete&num=${dto.num}'">삭제</button>	
 					</span>
 					<span>
-						<button onclick="location.href='main.jsp'">메인으로</button>	
+						<button onclick="location.href='main'">메인으로</button>	
 					</span>
 				</td>
 			</tr>

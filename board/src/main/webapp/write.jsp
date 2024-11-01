@@ -14,7 +14,8 @@
 <body>
 	<h2>글쓰기</h2>
     <div class="write-container">
-       <form action="insert.jsp" method="post" enctype="multipart/form-data">
+       <form action="main" method="post" enctype="multipart/form-data">
+       	   <input type="hidden" name="action" value="insert">
 	       <table>
 	       	<tr class="post-title">
 	       		<td class="tag"><label>제목</label></td>
@@ -30,14 +31,14 @@
 	        </tr>
 	        <tr class="attach-file">
 	        	<td class="tag"><label>파일 첨부</label></td>
-	        	<td><input type="file" name="uploadFile" /></td>
+	        	<td><input type="file" name="uploadFile" multiple="multiple"/></td>
 	        </tr>
 	       </table>
 	       <div class="button-group">
 	       	<span id="add"><input type="submit" value="게시글 추가" id="post-button"/></span>
-           	<span><button onclick="location.href='main.jsp'">메인으로</button></span>
 	       </div>
        </form>
+       <span><button onclick="location.href='main'">메인으로</button></span>
     </div>
 </body>
 </html>

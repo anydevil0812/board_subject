@@ -222,13 +222,17 @@ public class BoardDAO {
 			try{
 				
 				sql = "UPDATE board "
-					+ "SET content=? "
+					+ "SET content=?, file_name=?, file_data=? "
 					+ "WHERE num=?";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 				
 				pstmt.setString(1, dto.getContent());
+				pstmt.setString(2, dto.getFileName());
+				pstmt.setBytes(3, dto.getFileData());
+				pstmt.setInt(4, dto.getNum());
+				
 				result = pstmt.executeUpdate();
 				
 				DBUtil.close(pstmt, conn);
