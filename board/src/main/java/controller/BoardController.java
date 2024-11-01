@@ -66,6 +66,9 @@ public class BoardController extends HttpServlet {
         } else if ("write".equals(action)) {
             request.getRequestDispatcher("/write.jsp").forward(request, response);
         
+        } else if ("search".equals(action)) {
+            request.getRequestDispatcher("/search.jsp").forward(request, response);
+        
         } else if ("post".equals(action)) {
             request.getRequestDispatcher("/post.jsp").forward(request, response);
         
@@ -93,7 +96,6 @@ public class BoardController extends HttpServlet {
 	    String username = multi.getParameter("username");
 	    String content = multi.getParameter("content");
 	    String fileName = multi.getFilesystemName("uploadFile");
-	    int num = Integer.valueOf(multi.getParameter("num"));
 	    File file = multi.getFile("uploadFile");
 	    
 	    request.setAttribute("title", title);
@@ -101,8 +103,11 @@ public class BoardController extends HttpServlet {
         request.setAttribute("content", content);
 		request.setAttribute("fileName", fileName);
 		request.setAttribute("file", file);
-		request.setAttribute("num", num);
-		System.out.println("Action : " + action);
+		
+		if(multi.getParameter("num") != null) {
+	    	int num = Integer.valueOf(multi.getParameter("num"));
+	    	request.setAttribute("num", num);
+	    }
 		
 		if("insert".equals(action)) {
             request.getRequestDispatcher("/insert.jsp").forward(request, response);

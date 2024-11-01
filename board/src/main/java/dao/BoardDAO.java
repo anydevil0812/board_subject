@@ -182,6 +182,116 @@ public class BoardDAO {
 			}
 			return dto;
 		}
+		
+		// 게시글 리스트 검색 결과 총 개수 반환
+		public int searchListCount(String keyword, String option) {
+			
+			int totalCount = 0;
+			System.out.println("OPTION : " + option);
+			Connection conn = null;
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			String[] keywords = keyword.split(" ");
+			int len = keywords.length;
+			StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM board WHERE ");
+			
+			for(int i = 0; i < len; i++) {
+				sql.append(option + " Like ?");
+				
+				if(i < len -1) {
+					sql.append(" OR ");
+				}
+			}
+			
+			try {
+				
+				conn = DBUtil.connect();
+				pstmt = conn.prepareStatement(sql.toString());
+				
+				for(int i = 0; i < len; i++) {
+			        pstmt.setString(i + 1, "%" + keywords[i] + "%");
+			    }
+				
+				rs = pstmt.executeQuery();
+				if(rs.next()) {
+					totalCount = rs.getInt(1);
+				}
+				DBUtil.close(conn, pstmt, rs);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return totalCount;
+		}
+		
+		// 게시글 리스트 검색 페이지네이션
+		public List<BoardDTO> searchList(String keyword, String option, Integer start, Integer size, Integer page) {
+			
+			Integer offset = null;
+			Integer fetch = null;
+			
+			if (size != null) {
+				fetch = size;
+			}
+			if (page != null && size != null) {
+				offset = (page - 1) * size;
+			}
+			
+			List<BoardDTO> li = new ArrayList<BoardDTO>();
+			Connection conn = null;
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			String[] keywords = keyword.split(" ");
+			int len = keywords.length;
+			StringBuilder sql = new StringBuilder("SELECT * FROM board WHERE ");
+			
+			for(int i = 0; i < len; i++) {
+				sql.append(option + " Like ?");
+				
+				if(i < len -1) {
+					sql.append(" OR ");
+				}
+			}
+			
+			sql.append(" ORDER BY num ASC ");
+			sql.append("OFFSET ? ROWS ");
+			sql.append("FETCH NEXT ? ROWS ONLY");
+			
+			
+			try {
+				
+				conn = DBUtil.connect();
+				pstmt = conn.prepareStatement(sql.toString());
+				
+				for (int i = 0; i < len; i++) {
+			        pstmt.setString(i + 1, "%" + keywords[i] + "%");
+			    }
+				
+				pstmt.setInt(len + 1, offset);
+				pstmt.setInt(len + 2, fetch);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					
+					BoardDTO dto = new BoardDTO();
+					Timestamp ts = rs.getTimestamp("create_dt");
+					
+					dto.setNum(rs.getInt("num"));
+					dto.setName(rs.getString("name"));
+					dto.setTitle(rs.getString("title"));
+					dto.setDate(ts.toLocalDateTime());
+					dto.setViews(rs.getInt("views"));
+					li.add(dto);
+				}
+				DBUtil.close(conn, pstmt, rs);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return li;
+		}
 
 		// 조회수 1 증가
 		public int plusViewCount(int num) {
