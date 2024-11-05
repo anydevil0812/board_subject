@@ -12,8 +12,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.oreilly.servlet.MultipartRequest;
-import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import dao.BoardDAO;
 import dto.BoardDTO;
@@ -53,7 +55,6 @@ public class BoardController extends HttpServlet {
             List<BoardDTO> li = dao.getLists((currentPage - 1) * pageSize, pageSize, currentPage);
             request.setAttribute("lists", li);
             
-            
             List<String> timeList = new ArrayList<>();
             for (BoardDTO dto : li) {
                 LocalDateTime time = dto.getDate();
@@ -75,9 +76,9 @@ public class BoardController extends HttpServlet {
         } else if ("edit".equals(action)) {
             request.getRequestDispatcher("/edit.jsp").forward(request, response);
         
-        }  else if ("delete".equals(action)) {
-        	int num = Integer.parseInt(request.getParameter("num"));
-        	request.setAttribute("num", num);
+        } else if ("delete".equals(action)) {
+        	int postNum = Integer.parseInt(request.getParameter("post_num"));
+        	request.setAttribute("post_num", postNum);
             request.getRequestDispatcher("/delete.jsp").forward(request, response);
         
         } 
@@ -86,28 +87,80 @@ public class BoardController extends HttpServlet {
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		String saveDir = getServletContext().getRealPath("/upload"); 
-	    int maxSize = 10 * 1024 * 1024; 
+		String attachDir = getServletContext().getRealPath("/upload"); 
+	    File saveDir = new File(attachDir);
+		int maxSize = 10 * 1024 * 1024; 
 	    String encoding = "UTF-8";
 		
-		MultipartRequest multi = new MultipartRequest(request, saveDir, maxSize, encoding, new DefaultFileRenamePolicy());
-		String action = multi.getParameter("action");
-		String title = multi.getParameter("title");
-	    String username = multi.getParameter("username");
-	    String content = multi.getParameter("content");
-	    String fileName = multi.getFilesystemName("uploadFile");
-	    File file = multi.getFile("uploadFile");
+		int postNum = 0;
+		String action = null;
+		String title = null;
+	    String username = null;
+	    String content = null;
+	    String fileChanged = null;
 	    
+	    List<String> fileNames = new ArrayList<>();
+	    List<byte[]> files = new ArrayList<>();
+	    
+	    try {
+	    	DiskFileItemFactory factory = new DiskFileItemFactory();
+	    	factory.setSizeThreshold(maxSize);
+	    	factory.setRepository(saveDir);
+	    	
+	    	ServletFileUpload upload = new ServletFileUpload(factory);
+			List<FileItem> items = upload.parseRequest(request);
+			System.out.println("items : " + items);
+			
+			for (FileItem item : items) {
+			    if (item.isFormField()) { // 파일 or 일반 데이터 판별
+			    	
+			    	// 일반 필드 처리
+			        String fieldName = item.getFieldName(); 
+			        String fieldValue = item.getString(encoding); 
+			        
+			        switch (fieldName) {
+			            case "post_num":
+			                postNum = Integer.parseInt(fieldValue);
+			                break;
+			            case "title":
+			                title = fieldValue;
+			                break;
+			            case "username":
+			                username = fieldValue;
+			                break;
+			            case "content":
+			                content = fieldValue;
+			                break;
+			            case "action":
+			                action = fieldValue;
+			                break;
+			            case "fileChanged":
+			            	fileChanged = fieldValue;
+			            	break;
+			        }
+			        
+			        // 디버그 출력
+			        System.out.println("Field name: " + fieldName + ", Field value: " + fieldValue);
+			    } else { // 파일 필드 처리
+			        String fileName = item.getName();
+			        if (fileName != null && !fileName.isEmpty()) {
+			            fileNames.add(fileName);
+			            files.add(item.get());
+			        }
+			    }
+			}
+	    } catch (FileUploadException e) {
+			e.printStackTrace();
+		}
+	    System.out.println("POST_NUM : " + postNum);
+	    request.setAttribute("post_num", postNum);
 	    request.setAttribute("title", title);
         request.setAttribute("username", username);
         request.setAttribute("content", content);
-		request.setAttribute("fileName", fileName);
-		request.setAttribute("file", file);
-		
-		if(multi.getParameter("num") != null) {
-	    	int num = Integer.valueOf(multi.getParameter("num"));
-	    	request.setAttribute("num", num);
-	    }
+		request.setAttribute("fileNames", fileNames);
+		request.setAttribute("files", files);
+		System.out.println("fileChanged1111 : " + fileChanged);
+		request.setAttribute("fileChanged", fileChanged);
 		
 		if("insert".equals(action)) {
             request.getRequestDispatcher("/insert.jsp").forward(request, response);

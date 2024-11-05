@@ -1,3 +1,6 @@
+<%@page import="java.util.ArrayList"%>
+<%@page import="dto.BoardFileDTO"%>
+<%@page import="java.util.List"%>
 <%@page import="java.io.FileInputStream"%>
 <%@page import="java.io.File"%>
 <%@page import="dao.BoardDAO"%>
@@ -5,31 +8,41 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
+	
+	String fileChangedParam = (String) request.getAttribute("fileChanged");
+	System.out.println("fileChangedParam : " + fileChangedParam);
+	boolean isFileChanged = "true".equals(fileChangedParam);
 
+	int postNum = (int) request.getAttribute("post_num");
 	String content = (String) request.getAttribute("content");
-	String fileName = (String) request.getAttribute("fileName");
-	File file = (File) request.getAttribute("file");
-	int num = (int) request.getAttribute("num");
+	
+	List<String> fileNames = (List<String>) request.getAttribute("fileNames");
+	List<byte[]> files = (List<byte[]>) request.getAttribute("files");
 	
 	BoardDTO dto = new BoardDTO();
+	List<BoardFileDTO> fileDtoList = new ArrayList<BoardFileDTO>();
 	
-	if (fileName != null && file != null) {
-		byte[] fileData = new byte[(int) file.length()];
-	    FileInputStream fis = new FileInputStream(file);
-	    
-	    fis.read(fileData);
-	    fis.close();
-	    
-	    dto.setFileName(fileName);
-	    dto.setFileData(fileData);
+	for(int i = 0; i < fileNames.size(); i++){
+		String fileName = fileNames.get(i);
+		byte[] file = files.get(i);
+		
+		if (fileName != null && file != null) {
+			BoardFileDTO fileDto = new BoardFileDTO();
+			fileDto.setPostNum(postNum);
+            fileDto.setFileName(fileName);
+            fileDto.setFileData(file);
+            
+            fileDtoList.add(fileDto);
+		}
 	}
-    
+	
     dto.setContent(content);
-    dto.setNum(num);
+    dto.setPostNum(postNum);
 
     BoardDAO dao = new BoardDAO();
-    int result = dao.updateData(dto);
-    
+    System.out.println("isFileChanged : " + isFileChanged);
+    int result = dao.updateData(dto, fileDtoList, isFileChanged);
+    System.out.println("AAAAAAAAAAAAAAAAAAAA");
     if (result > 0) {
         response.sendRedirect("main");
     } else {

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class BoardDTO {
 	
-	private int num;
+	private int postNum;
 	
 	private String title;
 
@@ -16,17 +16,14 @@ public class BoardDTO {
 
 	private int views;
 	
-	private String fileName;
-	
-	private byte[] fileData;
-	
-	
-	public int getNum() {
-		return num;
+	private int parentNum;
+
+	public int getPostNum() {
+		return postNum;
 	}
 
-	public void setNum(int num) {
-		this.num = num;
+	public void setPostNum(int postNum) {
+		this.postNum = postNum;
 	}
 
 	public String getTitle() {
@@ -69,20 +66,12 @@ public class BoardDTO {
 		this.views = views;
 	}
 	
-	public String getFileName() {
-		return fileName;
+	public int getParentNum() {
+		return parentNum;
 	}
 
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
-	}
-
-	public byte[] getFileData() {
-		return fileData;
-	}
-
-	public void setFileData(byte[] fileData) {
-		this.fileData = fileData;
+	public void setParentNum(int parentNum) {
+		this.parentNum = parentNum;
 	}
 	
 }

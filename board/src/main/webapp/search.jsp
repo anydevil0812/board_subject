@@ -13,7 +13,10 @@
 	
 	String keyword = request.getParameter("keyword");
 	String option = request.getParameter("search-category");
-
+	
+	request.getSession().setAttribute("option", option);
+    request.getSession().setAttribute("keyword", keyword);
+	
 	int currentPage = 1;
     int pageSize = 2;
     int pageRange = 10;
@@ -96,13 +99,13 @@
        <input type="hidden" name="action" value="search">
 	   <span>
 	       <select name="search-category">
-	           <option value="title">제목</option>
-	           <option value="name">작성자</option>
-	           <option value="content">내용</option>
+	           <option value="title" ${option == "title" ? "selected" : ""}>제목</option>
+	           <option value="name" ${option == "name" ? "selected" : ""}>작성자</option>
+	           <option value="content" ${option == "content" ? "selected" : ""}>내용</option>
 	       </select>
 	   </span>
 	   <span>
-	       <input type="text" name="keyword" required>
+	       <input type="text" name="keyword" value="${keyword}" required>
 	   </span>
 	   <span>
 	       <button type="submit">검색</button>

@@ -1,3 +1,5 @@
+<%@page import="dto.BoardFileDTO"%>
+<%@page import="java.util.List"%>
 <%@page import="java.net.URLEncoder"%>
 <%@page import="java.io.File"%>
 <%@page import="java.io.FileInputStream"%>
@@ -10,11 +12,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
-    String numParam = request.getParameter("num");
-    int num = Integer.parseInt(numParam);
+    String fileIdParam = request.getParameter("file_id");
+    int fileId = Integer.parseInt(fileIdParam);
     
     BoardDAO dao = new BoardDAO();
-    BoardDTO dto = dao.getReadData(num);
+    BoardFileDTO dto = dao.getReadFileById(fileId);
     
     String fileName = dto.getFileName();
     byte[] fileData = dto.getFileData();
