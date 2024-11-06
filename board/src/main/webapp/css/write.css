@@ -43,6 +43,10 @@ textarea {
 	text-align: right;
 }
 
+.file-row {
+    margin-bottom: 10px;
+}
+
 #add {
 	margin-right: 20px;
 }

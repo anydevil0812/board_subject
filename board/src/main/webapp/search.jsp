@@ -67,9 +67,9 @@
 		    </tr>
 	    	<c:forEach var="dto" items="${lists}" varStatus="status">
 		    	<tr class="board-content">
-		            <td>${dto.num}</td>
+		            <td>${dto.postNum}</td>
 		            <td>
-		            	<a href="main?action=post&num=${dto.num}">
+		            	<a href="main?action=post&num=${dto.postNum}">
 	                    	${dto.title}
 	               		</a>
 		            </td>

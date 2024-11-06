@@ -404,7 +404,6 @@ public class BoardDAO {
 			sql.append("OFFSET ? ROWS ");
 			sql.append("FETCH NEXT ? ROWS ONLY");
 			
-			
 			try {
 				
 				conn = DBUtil.connect();
@@ -423,7 +422,7 @@ public class BoardDAO {
 					BoardDTO dto = new BoardDTO();
 					Timestamp ts = rs.getTimestamp("create_dt");
 					
-					dto.setPostNum(rs.getInt("num"));
+					dto.setPostNum(rs.getInt("post_num"));
 					dto.setName(rs.getString("name"));
 					dto.setTitle(rs.getString("title"));
 					dto.setDate(ts.toLocalDateTime());
@@ -467,9 +466,11 @@ public class BoardDAO {
 		}
 		
 		// 게시글 수정
-		public int updateData(BoardDTO dto, List<BoardFileDTO> files, boolean isFileChanged) {
+		public int updateData(BoardDTO dto, List<BoardFileDTO> files, boolean isFileChanged,
+							  int deletedFileCount, String[] deletedFileIds, String[] remainingFileIds) {
 			
 			int result = 0;
+			int fileCount = getReadAllFile(dto.getPostNum()).size();
 			Connection conn = null;
 			PreparedStatement boardPstmt = null;
 			PreparedStatement filePstmt1 = null;
@@ -487,7 +488,7 @@ public class BoardDAO {
 						 + "WHERE post_num=?";
 				
 				fileDeleteSql = "DELETE FROM board_file "
-							  + "WHERE post_num=?";
+							  + "WHERE file_id=?";
 				
 				noFileSql = "UPDATE board "
 						  + "SET file_exist=? "
@@ -505,20 +506,23 @@ public class BoardDAO {
 				boardPstmt.setInt(2, dto.getPostNum());
 				
 				result = boardPstmt.executeUpdate();
-				
+
 				if(isFileChanged) {
-					filePstmt1 = conn.prepareStatement(fileDeleteSql);
-					filePstmt1.setInt(1, dto.getPostNum());
-					filePstmt1.executeUpdate();
-					DBUtil.close(filePstmt1, null);
 					
-					if(files.size() == 0) {
+					if(deletedFileCount != 0) {
+						for(String deletedFileId : deletedFileIds) {
+							filePstmt1 = conn.prepareStatement(fileDeleteSql);
+							filePstmt1.setInt(1, Integer.parseInt(deletedFileId));
+							filePstmt1.executeUpdate();
+						}
+					}
+					
+					if(fileCount == deletedFileCount && fileCount >= files.size()) {
 						
 						filePstmt2 = conn.prepareStatement(noFileSql);
 						filePstmt2.setString(1, "N");
 						filePstmt2.setInt(2, dto.getPostNum());
 						filePstmt2.executeUpdate();
-						DBUtil.close(filePstmt2, null);
 						
 					} else {
 						
@@ -528,11 +532,13 @@ public class BoardDAO {
 							filePstmt3.setString(2, file.getFileName());
 							filePstmt3.setBytes(3, file.getFileData());
 							filePstmt3.executeUpdate();
-							DBUtil.close(filePstmt3, null);
 			            }
 					}
 				}
 				DBUtil.close(boardPstmt, conn);
+				DBUtil.close(filePstmt1, null);
+				DBUtil.close(filePstmt2, null);
+				DBUtil.close(filePstmt3, null);
 				
 			} catch (Exception e) {
 				e.printStackTrace();

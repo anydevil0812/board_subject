@@ -21,14 +21,9 @@
 	
 	List<BoardFileDTO> files = dao.getReadAllFile(postNum);
 	
-	for(BoardFileDTO file : files) {
-		System.out.println(file.getFileName());
-	}
-	
 	request.setAttribute("dto", dto);
 	request.setAttribute("time", t);
 	request.setAttribute("files", files);
-	
 	
 %>
 <!DOCTYPE html>

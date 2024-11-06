@@ -19,6 +19,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import dao.BoardDAO;
 import dto.BoardDTO;
+import dto.BoardFileDTO;
 
 @WebServlet("/main")
 public class BoardController extends HttpServlet {
@@ -78,9 +79,10 @@ public class BoardController extends HttpServlet {
         
         } else if ("delete".equals(action)) {
         	int postNum = Integer.parseInt(request.getParameter("post_num"));
-        	request.setAttribute("post_num", postNum);
-            request.getRequestDispatcher("/delete.jsp").forward(request, response);
-        
+            BoardDAO dao = new BoardDAO();
+            int result = dao.deleteData(postNum);
+        	
+            sendResultPage(request, response, result, "삭제");
         } 
     	
     }
@@ -93,11 +95,16 @@ public class BoardController extends HttpServlet {
 	    String encoding = "UTF-8";
 		
 		int postNum = 0;
+		int deletedFileCount = 0;
 		String action = null;
 		String title = null;
 	    String username = null;
 	    String content = null;
-	    String fileChanged = null;
+	    String deletedFileIds = null;
+	    String remainingFileIds = null;
+	    String[] deletedFileIdsArr = null;
+	    String[] remainingFileIdsArr = null;
+	    boolean isFileChanged = false;
 	    
 	    List<String> fileNames = new ArrayList<>();
 	    List<byte[]> files = new ArrayList<>();
@@ -109,7 +116,6 @@ public class BoardController extends HttpServlet {
 	    	
 	    	ServletFileUpload upload = new ServletFileUpload(factory);
 			List<FileItem> items = upload.parseRequest(request);
-			System.out.println("items : " + items);
 			
 			for (FileItem item : items) {
 			    if (item.isFormField()) { // 파일 or 일반 데이터 판별
@@ -135,12 +141,18 @@ public class BoardController extends HttpServlet {
 			                action = fieldValue;
 			                break;
 			            case "fileChanged":
-			            	fileChanged = fieldValue;
+			            	isFileChanged = Boolean.parseBoolean(fieldValue);
 			            	break;
+			            case "deletedFileCount":
+			            	deletedFileCount = Integer.parseInt(fieldValue);
+			            	break;
+			            case "deletedFileIds":
+			            	deletedFileIds = fieldValue;
+			                break;
+			            case "remainingFileIds":
+			            	remainingFileIds = fieldValue;
+			                break;
 			        }
-			        
-			        // 디버그 출력
-			        System.out.println("Field name: " + fieldName + ", Field value: " + fieldValue);
 			    } else { // 파일 필드 처리
 			        String fileName = item.getName();
 			        if (fileName != null && !fileName.isEmpty()) {
@@ -149,29 +161,91 @@ public class BoardController extends HttpServlet {
 			        }
 			    }
 			}
+			
+			if(deletedFileIds != null) {
+				deletedFileIdsArr = deletedFileIds.split(",");
+			}
+			
+			if(remainingFileIds != null) {
+				remainingFileIdsArr = remainingFileIds.split(",");
+			}
+			
 	    } catch (FileUploadException e) {
 			e.printStackTrace();
 		}
-	    System.out.println("POST_NUM : " + postNum);
-	    request.setAttribute("post_num", postNum);
-	    request.setAttribute("title", title);
-        request.setAttribute("username", username);
-        request.setAttribute("content", content);
-		request.setAttribute("fileNames", fileNames);
-		request.setAttribute("files", files);
-		System.out.println("fileChanged1111 : " + fileChanged);
-		request.setAttribute("fileChanged", fileChanged);
-		
+	    
 		if("insert".equals(action)) {
-            request.getRequestDispatcher("/insert.jsp").forward(request, response);
+			
+			BoardDTO dto = new BoardDTO();
+			List<BoardFileDTO> fileDtoList = new ArrayList<BoardFileDTO>();
+			
+			for(int i = 0; i < fileNames.size(); i++){
+				String fileName = fileNames.get(i);
+				byte[] file = files.get(i);
+				
+				if (fileName != null && file != null) {
+					BoardFileDTO fileDto = new BoardFileDTO();
+					fileDto.setPostNum(postNum);
+		            fileDto.setFileName(fileName);
+		            fileDto.setFileData(file);
+		            
+		            fileDtoList.add(fileDto);
+				}
+			}
+			
+			dto.setPostNum(postNum);
+		    dto.setName(username);
+		    dto.setTitle(title);
+		    dto.setContent(content);
+
+		    BoardDAO dao = new BoardDAO();
+		    int result = dao.insertData(dto, fileDtoList);
+			
+		    sendResultPage(request, response, result, "작성");
         
 		} else if ("update".equals(action)) {
-            request.getRequestDispatcher("/update.jsp").forward(request, response);
+			
+			BoardDTO dto = new BoardDTO();
+			List<BoardFileDTO> fileDtoList = new ArrayList<BoardFileDTO>();
+		    
+			for(int i = 0; i < fileNames.size(); i++){
+				String fileName = fileNames.get(i);
+				byte[] file = files.get(i);
+				
+				if (fileName != null && file != null) {
+					BoardFileDTO fileDto = new BoardFileDTO();
+					fileDto.setPostNum(postNum);
+		            fileDto.setFileName(fileName);
+		            fileDto.setFileData(file);
+		            
+		            fileDtoList.add(fileDto);
+				}
+			}
+			
+		    dto.setContent(content);
+		    dto.setPostNum(postNum);
+
+		    BoardDAO dao = new BoardDAO();
+		    int result = dao.updateData(dto, fileDtoList, isFileChanged, deletedFileCount,
+		    							deletedFileIdsArr, remainingFileIdsArr);
+			
+		    sendResultPage(request, response, result, "수정");
         
         } else {
         	doGet(request, response);
         }
 		
+	}
+	
+	protected void sendResultPage(HttpServletRequest request, HttpServletResponse response, int result, String type) throws ServletException, IOException {
+		
+		if (result > 0) {
+        	request.setAttribute("successMessage", "게시글 " + type + "에 성공했습니다.");
+            request.getRequestDispatcher("/success.jsp").forward(request, response);
+        } else {
+            request.setAttribute("errorMessage", "게시글 " + type + "에 성공했습니다.");
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+        }
 	}
 
 }
