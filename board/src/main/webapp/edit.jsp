@@ -46,7 +46,10 @@
                 </tr>
                 <tr class="post-content">
                     <td class="tag"><label>내용</label></td>
-                    <td><textarea class="content" name="content" placeholder="내용을 입력하세요." required>${dto.content}</textarea></td>
+                    <td>
+                    	<textarea class="content" name="content" maxlength="1000" placeholder="내용을 입력하세요." oninput="updateContentLength(this)" required>${dto.content}</textarea>
+                    	<p id="contentLengthInfo">0 / 1000자</p> 
+                    </td>
                 </tr>
                 <tr class="attach-file">
                     <td class="tag"><label>첨부파일</label></td>
@@ -78,15 +81,29 @@
             existingFileNames.push(fileLink.textContent);
         });
     	
+	    // 게시글 내용 실시간 글자 수 업데이트 및 초과시 잘라내기
+	    function updateContentLength(textarea) {
+	        const maxLength = textarea.maxLength;
+	        const currentLength = textarea.value.length;
+	        document.getElementById('contentLengthInfo').innerText = currentLength + " / " + maxLength + "자";
+	
+	        // 내용이 최대 길이를 초과하면 잘라내고 경고창 표시
+	        if (currentLength > maxLength) {
+	        	alert("내용은 최대 " + maxLength + "자까지 입력할 수 있습니다.");
+	            textarea.value = textarea.value.substring(0, maxLength); 
+	            document.getElementById('contentLengthInfo').innerText = maxLength + " / " + maxLength + "자";
+	        }
+	    }
+        
 		// 삭제된 파일 수 추적
 	    function deleteFile(fileId) {
 	    	const deletedFileCount = document.getElementById('deletedFileCount');
 	    	const currentDeletedCount = parseInt(deletedFileCount.value);
-	    	deletedFileCount.value = currentDeletedCount + 1; // 삭제된 파일 수 증가
+	    	deletedFileCount.value = currentDeletedCount + 1; 
 	    	isFileChanged = true;
 	    }
     
-    	// 파일 최대 개수 체크
+	 	// 최대 파일 개수 제한 체크
 	    function checkFileCount(input) {
     		
 	    	const maxFiles = 3;

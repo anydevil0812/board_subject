@@ -18,8 +18,8 @@
     request.getSession().setAttribute("keyword", keyword);
 	
 	int currentPage = 1;
-    int pageSize = 2;
-    int pageRange = 10;
+    int pageSize = 5;
+    int pageRange = 5;
 	
     if (request.getParameter("page") != null) {
         currentPage = Integer.parseInt(request.getParameter("page"));
@@ -69,10 +69,22 @@
 		    	<tr class="board-content">
 		            <td>${dto.postNum}</td>
 		            <td>
-		            	<a href="main?action=post&num=${dto.postNum}">
-	                    	${dto.title}
-	               		</a>
-		            </td>
+				      <c:choose>
+				      	<c:when test="${dto.depth==0}">
+				      		<a href="main?action=post&post_num=${dto.postNum}">
+					            ${dto.title}
+					        </a>
+				      	</c:when>
+				      	<c:when test="${dto.depth > 0}">
+				      		<span style="margin-left: ${dto.depth * 60}px;">
+					      		ㄴ
+					      		<a href="main?action=post&post_num=${dto.postNum}">
+						            ${dto.title}
+						        </a>
+					        </span>
+				      	</c:when>
+				      </c:choose>
+					</td>
 		            <td>${dto.name}</td>
 		            <td>${time[status.index]}</td>
 		            <td>${dto.views}</td>
@@ -85,8 +97,15 @@
 	        <a href="main?action=search&search-category=${option}&keyword=${keyword}&page=${startPage - 1}">이전</a>
 	    </c:if>
 	    <c:forEach begin="${startPage}" end="${endPage}" var="i">
-	        <a href="main?action=search&search-category=${option}&keyword=${keyword}&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
-	    </c:forEach>
+	        <c:choose>
+	            <c:when test="${i == currentPage}">
+	                <span class="active" style="font-weight: bold;">${i}</span>
+	            </c:when>
+	            <c:otherwise>
+	                <a href="main?action=search&search-category=${option}&keyword=${keyword}&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+	            </c:otherwise>
+	        </c:choose>
+    	</c:forEach>
 	    <c:if test="${endPage < totalPages}">
 	        <a href="main?action=search&search-category=${option}&keyword=${keyword}&page=${endPage + 1}">다음</a>
 	    </c:if>

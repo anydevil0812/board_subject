@@ -34,19 +34,15 @@ public class BoardDAO {
 			Instant instant = date.toInstant();
 			LocalDateTime time = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
 			Timestamp timestamp = Timestamp.valueOf(time);
-			String fileExist;
+			String fileExist = (files == null) ? "N" : "Y";
 			
-			if(files == null) {
-				fileExist = "N";
-			} else {
-				fileExist = "Y";
-			}
+			int depth = (dto.getParentNum() != null) ? getParentDepth(dto.getParentNum()) + 1 : 0;
 			
 			try {
 				boardSql = "INSERT INTO board "
-							+ "(post_num,name,title,content,create_dt,views,file_exist) "
+							+ "(post_num,name,title,content,create_dt,views,file_exist,parent_num,reply_depth) "
 						 + "VALUES "
-							+ "(?,?,?,?,?,1,?)";
+							+ "(?,?,?,?,?,1,?,?,?)";
 				
 				fileSql = "INSERT INTO board_file "
 							+ "(file_id, post_num, file_name, file_data) "
@@ -69,6 +65,8 @@ public class BoardDAO {
 				boardPstmt.setCharacterStream(4, new StringReader(content), content.length());
 				boardPstmt.setTimestamp(5, timestamp);
 				boardPstmt.setString(6, fileExist);
+				boardPstmt.setObject(7, dto.getParentNum());
+				boardPstmt.setInt(8, depth);
 				
 				result = boardPstmt.executeUpdate(); 
 				
@@ -152,7 +150,37 @@ public class BoardDAO {
 			return nextPostNum;
 		}
 		
+		// 게시글 전체 순번 조회
+		public List<Integer> getPostNumbers() {
+			
+			List<Integer> PostNumbers = new ArrayList<>();
+			Connection conn = null;
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			String sql;
 
+		    try {
+				sql = "SELECT post_num "
+					+ "FROM board "
+					+ "ORDER BY post_num ASC";
+				
+				conn = DBUtil.connect();
+				pstmt = conn.prepareStatement(sql);
+				rs = pstmt.executeQuery();
+				
+				while(rs.next()) {
+					PostNumbers.add(rs.getInt(1));
+				}
+				
+				DBUtil.close(conn, pstmt, rs);
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return PostNumbers;
+		}
+		
+		
 		// 게시글 리스트 조회
 		public List<BoardDTO> getLists(Integer start, Integer size, Integer page) {
 			
@@ -175,17 +203,23 @@ public class BoardDAO {
 			try {
 				
 				sql = "SELECT * "
+					+ "FROM ("
+					+ "SELECT * "
 					+ "FROM board "
-					+ "ORDER BY post_num ASC "
+					+ "CONNECT BY PRIOR post_num = parent_num "
+					+ "START WITH parent_num IS NULL "
+					+ "ORDER SIBLINGS BY "
+						+ "CASE WHEN parent_num IS NULL THEN create_dt END DESC, "
+						+ "CASE WHEN parent_num IS NOT NULL THEN create_dt END ASC "
+					+ ") "
 					+ "OFFSET ? ROWS "
-					+ "FETCH NEXT ? ROWS ONLY ";
+					+ "FETCH NEXT ? ROWS ONLY";
 				
 				conn = DBUtil.connect();
 				pstmt = conn.prepareStatement(sql);
 				
 				pstmt.setInt(1, offset);
 				pstmt.setInt(2, fetch);
-				
 				rs = pstmt.executeQuery();
 				
 				while(rs.next()) {
@@ -198,6 +232,9 @@ public class BoardDAO {
 					dto.setTitle(rs.getString("title"));
 					dto.setDate(ts.toLocalDateTime());
 					dto.setViews(rs.getInt("views"));
+					dto.setParentNum(rs.getInt("parent_num"));
+					dto.setDepth(rs.getInt("reply_depth"));
+					
 					li.add(dto);
 				}
 				DBUtil.close(conn, pstmt, rs);
@@ -390,7 +427,7 @@ public class BoardDAO {
 			
 			String[] keywords = keyword.split(" ");
 			int len = keywords.length;
-			StringBuilder sql = new StringBuilder("SELECT * FROM board WHERE ");
+			StringBuilder sql = new StringBuilder("SELECT * FROM ( SELECT * FROM board WHERE ");
 			
 			for(int i = 0; i < len; i++) {
 				sql.append(option + " Like ?");
@@ -399,8 +436,11 @@ public class BoardDAO {
 					sql.append(" OR ");
 				}
 			}
-			
-			sql.append(" ORDER BY post_num ASC ");
+			sql.append(" START WITH parent_num IS NULL ");
+			sql.append("CONNECT BY PRIOR post_num = parent_num ");
+			sql.append("ORDER SIBLINGS BY ");
+			sql.append("CASE WHEN PARENT_NUM IS NULL THEN CREATE_DT END DESC, ");
+			sql.append("CASE WHEN PARENT_NUM IS NOT NULL THEN CREATE_DT END ASC) ");
 			sql.append("OFFSET ? ROWS ");
 			sql.append("FETCH NEXT ? ROWS ONLY");
 			
@@ -427,6 +467,8 @@ public class BoardDAO {
 					dto.setTitle(rs.getString("title"));
 					dto.setDate(ts.toLocalDateTime());
 					dto.setViews(rs.getInt("views"));
+					dto.setParentNum(rs.getInt("parent_num"));
+					dto.setDepth(rs.getInt("reply_depth"));
 					li.add(dto);
 				}
 				DBUtil.close(conn, pstmt, rs);
@@ -436,7 +478,36 @@ public class BoardDAO {
 			}
 			return li;
 		}
+		
+		// 부모 글의 depth 조회
+		public int getParentDepth(Integer parentNum) {
+		    
+			int depth = 0;
+		    Connection conn = null;
+		    PreparedStatement pstmt = null;
+		    ResultSet rs = null;
+		    String sql = "SELECT reply_depth "
+		    		   + "FROM board "
+		    		   + "WHERE post_num = ?";
+		    
+		    try {
+		        conn = DBUtil.connect();
+		        pstmt = conn.prepareStatement(sql);
+		        pstmt.setInt(1, parentNum);
+		        rs = pstmt.executeQuery();
+		        
+		        if (rs.next()) {
+		        	depth = rs.getInt("reply_depth");
+		        }
+		        
+		        DBUtil.close(conn, pstmt, rs);
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+		    return depth;
+		}
 
+		
 		// 조회수 1 증가
 		public int plusViewCount(int num) {
 

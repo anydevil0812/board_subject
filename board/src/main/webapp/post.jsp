@@ -66,6 +66,9 @@
 			<tr>
 				<td colspan="4">
 					<span>
+						<button onclick="location.href='main?action=reply&parent_num=${dto.postNum}&title=${dto.title}'" >답글 작성</button>	
+					</span>
+					<span>
 						<button onclick="location.href='main?action=edit&post_num=${dto.postNum}'" >수정</button>	
 					</span>
 					<span>

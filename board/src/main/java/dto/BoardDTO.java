@@ -16,7 +16,7 @@ public class BoardDTO {
 
 	private int views;
 	
-	private int parentNum;
+	private Integer parentNum;
 	
 	private int depth;
 
@@ -68,11 +68,11 @@ public class BoardDTO {
 		this.views = views;
 	}
 	
-	public int getParentNum() {
+	public Integer getParentNum() {
 		return parentNum;
 	}
 
-	public void setParentNum(int parentNum) {
+	public void setParentNum(Integer parentNum) {
 		this.parentNum = parentNum;
 	}
 	

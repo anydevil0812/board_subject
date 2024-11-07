@@ -7,6 +7,10 @@ body {
     flex-direction: column;
 }
 
+h2 {
+    margin-bottom: 30px; 
+}
+
 table {
     width: 100%; 
     border-collapse: collapse;
@@ -46,6 +50,34 @@ textarea {
 .file-row {
     margin-bottom: 10px;
 }
+
+.parent-select-container {
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: space-between; /* label과 select를 양 끝에 배치 */
+}
+
+/* label과 select 요소가 한 줄로 배치되도록 */
+.parent-label {
+    margin-right: 10px; /* label과 select 사이 간격 조정 */
+}
+
+.parent-select {
+    width: 200px; /* select 박스의 너비 조정 */
+}
+
+/* select 요소에 대한 스타일 */
+.parent-select {
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* flexbox를 이용하여 label과 select가 나란히 보이도록 설정 */
+.table-container td {
+    padding: 10px;
+}
+
 
 #add {
 	margin-right: 20px;

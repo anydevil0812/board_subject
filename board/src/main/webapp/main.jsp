@@ -8,6 +8,9 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dto.BoardDTO" %>
 
+<%
+
+%>
 
 <html>
 <head>
@@ -29,10 +32,22 @@
 		    	<tr class="board-content">
 		            <td>${dto.postNum}</td>
 		            <td>
-		            	<a href="main?action=post&post_num=${dto.postNum}">
-	                    	${dto.title}
-	               		</a>
-		            </td>
+				      <c:choose>
+				      	<c:when test="${dto.depth==0}">
+				      		<a href="main?action=post&post_num=${dto.postNum}">
+					            ${dto.title}
+					        </a>
+				      	</c:when>
+				      	<c:when test="${dto.depth > 0}">
+				      		<span style="margin-left: ${dto.depth * 60}px;">
+					      		ㄴ
+					      		<a href="main?action=post&post_num=${dto.postNum}">
+						            ${dto.title}
+						        </a>
+					        </span>
+				      	</c:when>
+				      </c:choose>
+					</td>
 		            <td>${dto.name}</td>
 		            <td>${time[status.index]}</td>
 		            <td>${dto.views}</td>
@@ -45,8 +60,15 @@
 	        <a href="main?action=main&page=${startPage - 1}">이전</a>
 	    </c:if>
 	    <c:forEach begin="${startPage}" end="${endPage}" var="i">
-	        <a href="main?action=main&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
-	    </c:forEach>
+	        <c:choose>
+	            <c:when test="${i == currentPage}">
+	                <span class="active" style="font-weight: bold;">${i}</span>
+	            </c:when>
+	            <c:otherwise>
+	                <a href="main?action=main&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+	            </c:otherwise>
+	        </c:choose>
+    	</c:forEach>
 	    <c:if test="${endPage < totalPages}">
 	        <a href="main?action=main&page=${endPage + 1}">다음</a>
 	    </c:if>

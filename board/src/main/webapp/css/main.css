@@ -20,6 +20,14 @@ table td {
 	border-bottom: 1px solid lightgray;	
 }
 
+.active {
+	font-weight: bold;
+}
+
+.board-content span {
+    display: inline-block;
+}
+
 .board-head {
 	background-color: rgb(128, 255, 128);
 	border: none;

@@ -35,8 +35,8 @@ public class BoardController extends HttpServlet {
         if (action == null || "main".equals(action)) {
         	
         	int currentPage = 1;
-            int pageSize = 2;
-            int pageRange = 10;
+            int pageSize = 5;
+            int pageRange = 5;
 
             if (request.getParameter("page") != null) {
                 currentPage = Integer.parseInt(request.getParameter("page"));
@@ -68,6 +68,9 @@ public class BoardController extends HttpServlet {
         } else if ("write".equals(action)) {
             request.getRequestDispatcher("/write.jsp").forward(request, response);
         
+        } else if ("reply".equals(action)) {
+            request.getRequestDispatcher("/reply.jsp").forward(request, response);
+        
         } else if ("search".equals(action)) {
             request.getRequestDispatcher("/search.jsp").forward(request, response);
         
@@ -79,7 +82,6 @@ public class BoardController extends HttpServlet {
         
         } else if ("delete".equals(action)) {
         	int postNum = Integer.parseInt(request.getParameter("post_num"));
-            BoardDAO dao = new BoardDAO();
             int result = dao.deleteData(postNum);
         	
             sendResultPage(request, response, result, "삭제");
@@ -91,10 +93,13 @@ public class BoardController extends HttpServlet {
 		
 		String attachDir = getServletContext().getRealPath("/upload"); 
 	    File saveDir = new File(attachDir);
-		int maxSize = 10 * 1024 * 1024; 
+	    int maxRequestSize = 15 * 1024 * 1024; 
+	    int maxFileSize = 10 * 1024 * 1024;    
+	    int maxContentSize = 4 * 1024 * 1024;  
 	    String encoding = "UTF-8";
 		
 		int postNum = 0;
+		String parentNum = null;
 		int deletedFileCount = 0;
 		String action = null;
 		String title = null;
@@ -111,10 +116,12 @@ public class BoardController extends HttpServlet {
 	    
 	    try {
 	    	DiskFileItemFactory factory = new DiskFileItemFactory();
-	    	factory.setSizeThreshold(maxSize);
+	    	factory.setSizeThreshold(maxContentSize); // content 크기 조절(4MB)
 	    	factory.setRepository(saveDir);
 	    	
 	    	ServletFileUpload upload = new ServletFileUpload(factory);
+	    	upload.setFileSizeMax(maxFileSize); // 파일 크기 조절(10MB)
+	    	upload.setSizeMax(maxRequestSize); // 전체 요청 크기 조절 (15MB)
 			List<FileItem> items = upload.parseRequest(request);
 			
 			for (FileItem item : items) {
@@ -128,6 +135,9 @@ public class BoardController extends HttpServlet {
 			            case "post_num":
 			                postNum = Integer.parseInt(fieldValue);
 			                break;
+			            case "parent_num":
+			            	parentNum = fieldValue;
+			            	break;
 			            case "title":
 			                title = fieldValue;
 			                break;
@@ -197,10 +207,11 @@ public class BoardController extends HttpServlet {
 		    dto.setName(username);
 		    dto.setTitle(title);
 		    dto.setContent(content);
-
-		    BoardDAO dao = new BoardDAO();
+		    if(parentNum != null) {
+		    	dto.setParentNum(Integer.parseInt(parentNum));
+		    }
+		    
 		    int result = dao.insertData(dto, fileDtoList);
-			
 		    sendResultPage(request, response, result, "작성");
         
 		} else if ("update".equals(action)) {
@@ -225,7 +236,6 @@ public class BoardController extends HttpServlet {
 		    dto.setContent(content);
 		    dto.setPostNum(postNum);
 
-		    BoardDAO dao = new BoardDAO();
 		    int result = dao.updateData(dto, fileDtoList, isFileChanged, deletedFileCount,
 		    							deletedFileIdsArr, remainingFileIdsArr);
 			
@@ -243,7 +253,7 @@ public class BoardController extends HttpServlet {
         	request.setAttribute("successMessage", "게시글 " + type + "에 성공했습니다.");
             request.getRequestDispatcher("/success.jsp").forward(request, response);
         } else {
-            request.setAttribute("errorMessage", "게시글 " + type + "에 성공했습니다.");
+            request.setAttribute("errorMessage", "게시글 " + type + "에 실패했습니다.");
             request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
 	}
