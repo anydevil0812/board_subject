@@ -111,7 +111,7 @@
             const deletedFiles = parseInt(document.getElementById('deletedFileCount').value); // 삭제를 위해 체크한 파일 수
             const existingFiles = document.querySelectorAll('.file-row').length; // 기존 게시물 첨부 파일 수
 
-            const totalFiles = currentFiles + existingFiles - deletedFiles;
+            const totalFiles = currentFiles.length + existingFiles - deletedFiles;
 
             if(totalFiles > maxFiles) {
                 alert("최대 3개의 파일만 업로드할 수 있습니다.");
