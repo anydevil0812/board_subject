@@ -166,7 +166,12 @@ public class BoardController extends HttpServlet {
 			    } else { // 파일 필드 처리
 			        String fileName = item.getName();
 			        if (fileName != null && !fileName.isEmpty()) {
-			            fileNames.add(fileName);
+			            
+			        	String filePath = attachDir + File.separator + fileName; 
+	                    File uploadedFile = new File(filePath);
+	                    item.write(uploadedFile);
+	                    
+			        	fileNames.add(fileName);
 			            files.add(item.get());
 			        }
 			    }
@@ -181,6 +186,8 @@ public class BoardController extends HttpServlet {
 			}
 			
 	    } catch (FileUploadException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	    

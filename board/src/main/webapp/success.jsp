@@ -12,7 +12,7 @@
 <body>
     <script>
             alert("${successMessage}");
-            window.location.href = "main"; 
+            window.location.href = "main";
     </script>
 </body>
 </html>
